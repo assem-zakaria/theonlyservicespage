@@ -271,32 +271,31 @@
 
 
                             //  Background Image
-                                PIXI.Assets.add('canvasBackgroundImg', './images/project-fs-2.jpg');
+                                let bgSprite = null;
 
-                                PIXI.Assets.load('canvasBackgroundImg').then((texture) => {
+                                PIXI.Assets.load('./images/project-fs-2.jpg').then((texture) => {
                                     if (!texture) {
                                         console.error('Failed to load texture');
                                         return;
                                     }
 
-                                    const bgSprite = new PIXI.Sprite(texture);
+                                    if (!bgSprite) { 
+                                        bgSprite = new PIXI.Sprite(texture);
+                                        bgSprite.anchor.set(0.5);
+                                        app.stage.addChildAt(bgSprite, 0);
+                                    }
 
-                                    bgSprite.anchor.set(0.5); // Center the image
-                                    app.stage.addChildAt(bgSprite, 0); // Add to the back
-
-                                    // Function to scale and position the background while preserving aspect ratio
+                                    // Function to scale and position the background
                                     function resizeBackground() {
-                                        const canvasWidth = app.screen.width;
-                                        const canvasHeight = app.screen.height;
+                                        console.log("resizeBackground triggered");
+
+                                        const canvasWidth = app.renderer.width;
+                                        const canvasHeight = app.renderer.height;
                                         const imgWidth = bgSprite.texture.width;
                                         const imgHeight = bgSprite.texture.height;
 
-                                        // Calculate scale factors for width and height
-                                        const scaleX = canvasWidth / imgWidth;
-                                        const scaleY = canvasHeight / imgHeight;
-
-                                        // Use the larger scale factor to ensure the image covers the entire canvas
-                                        const scale = Math.max(scaleX, scaleY);
+                                        // Scale to cover the canvas while maintaining aspect ratio
+                                        const scale = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
                                         bgSprite.scale.set(scale);
 
                                         // Center the image
@@ -304,9 +303,15 @@
                                         bgSprite.y = canvasHeight / 2;
                                     }
 
-                                    // Apply resize once and on window resize
+                                    // Initial resize
                                     resizeBackground();
-                                    window.addEventListener('resize', resizeBackground);
+
+                                    // Listen for window resize events
+                                    window.addEventListener('resize', () => {
+                                        app.renderer.resize(window.innerWidth, window.innerHeight);
+                                        resizeBackground(); // Only update the sprite, do NOT reload assets
+                                    });
+
                                 }).catch((err) => {
                                     console.error('Error loading image:', err);
                                 });
@@ -315,43 +320,75 @@
                                 const textContainer = new PIXI.Container();
                                 const padding = 50;
                                 const spacing = 70;
-                                let textWidth = app.screen.width * 0.6; // 60% of canvas width
                                 let bottomY = app.screen.height - padding;
 
-                                // Style for the main heading
-                                const headingStyle = new PIXI.TextStyle({
-                                    fontFamily: 'Arial',
-                                    fontSize: 90,
-                                    fontWeight: 'bold',
-                                    fill: '#ffffff',
-                                });
+                                // Function to update text width dynamically
+                                function updateTextWidth() {
+                                    return {
+                                        headingTextWidth: app.screen.width * 0.9,
+                                        descriptionTextWidth: app.screen.width * 0.6,
+                                    };
+                                }
+
+                                // Function to create text styles
+                                function createTextStyles() {
+                                    const { headingTextWidth, descriptionTextWidth } = updateTextWidth();
+
+                                    return {
+                                        headingStyle: new PIXI.TextStyle({
+                                            fontFamily: 'Arial',
+                                            fontSize: 90,
+                                            fontWeight: 'bold',
+                                            fill: '#ffffff',
+                                            wordWrap: true,
+                                            wordWrapWidth: headingTextWidth,
+                                            resolution: window.devicePixelRatio
+                                        }),
+                                        descriptionStyle: new PIXI.TextStyle({
+                                            fontFamily: 'Arial',
+                                            fontSize: 30,
+                                            fill: '#ffffff',
+                                            lineHeight: 36,
+                                            wordWrap: true,
+                                            wordWrapWidth: descriptionTextWidth,
+                                            resolution: window.devicePixelRatio
+                                        })
+                                    };
+                                }
+
+                                let { headingStyle, descriptionStyle } = createTextStyles();
 
                                 const headingText = new PIXI.Text('DIGITAL TRANSFORMATION', headingStyle);
-
-                                headingText.x = padding;
-                                headingText.y = bottomY - headingText.height - spacing;
-
-                                // Style for the description text
-                                const descriptionStyle = new PIXI.TextStyle({
-                                    fontFamily: 'Arial',
-                                    fontSize: 30,
-                                    fill: '#ffffff',
-                                    lineHeight: 36,
-                                    wordWrap: true,
-                                    wordWrapWidth: textWidth, // Limit width to 60% of canvas width
-                                });
-
                                 const descriptionText = new PIXI.Text(
                                     "We don’t just navigate technology—we harness it. Every click and interaction reflects your brand’s identity, shaping a digital presence that moves in sync with your vision.",
                                     descriptionStyle
                                 );
 
-                                descriptionText.x = padding;
-                                descriptionText.y = bottomY - descriptionText.height;
-
                                 textContainer.addChild(headingText);
                                 textContainer.addChild(descriptionText);
                                 app.stage.addChild(textContainer);
+
+                                function alignText() {
+                                    const { headingTextWidth, descriptionTextWidth } = updateTextWidth();
+
+                                    // Update text styles with new widths
+                                    headingText.style.wordWrapWidth = headingTextWidth;
+                                    descriptionText.style.wordWrapWidth = descriptionTextWidth;
+                                    
+                                    descriptionText.x = padding;
+                                    descriptionText.y = bottomY - descriptionText.height;
+                                    headingText.x = padding;
+                                    headingText.y = bottomY - headingText.height - descriptionText.height;
+                                }
+
+                                alignText();
+
+                                window.addEventListener("resize", () => {
+                                    ({ headingStyle, descriptionStyle } = createTextStyles());
+                                    headingText.style = headingStyle;
+                                    descriptionText.style = descriptionStyle;
+                                    alignText();
+                                });
 
                             //  Text Displacement Filter
                                 // PIXI.Assets.load('./images/awzuINU_qrktxk.jpg').then((displacementTexture) => {
@@ -385,11 +422,12 @@
                                     const displacementRingSprite = new PIXI.Sprite(displacementRingTexture);
                                     displacementRingSprite.width = 250;
                                     displacementRingSprite.height = 250;
+                                    displacementRingSprite.padding = 100;
 
                                     app.stage.addChild(displacementRingSprite);
 
                                     const displacementRingFilter = new PIXI.filters.DisplacementFilter(displacementRingSprite);
-                                    displacementRingFilter.scale.set(-55, -55);
+                                    displacementRingFilter.scale.set(-100, -100);
                                     app.stage.filters = [displacementRingFilter];
 
                                     //  Mousemove Event
@@ -401,7 +439,7 @@
                                             gsap.to(displacementRingSprite, {
                                                 x: x,
                                                 y: y,
-                                                duration: 1, // Smooth motion
+                                                duration: 1.5,
                                                 ease: "power3.out"
                                             });
                                         });
@@ -410,38 +448,9 @@
                                     console.error('Error loading displacement texture:', err);
                                 });
 
-                            // Apply the RGB Split filter
-                                // let rgbSplitFilter = new PIXI.filters.RGBSplitFilter();
-                                // rgbSplitFilter.red = [-10, 0];  // Move red channel left
-                                // rgbSplitFilter.green = [0, 10]; // Move green channel up
-                                // rgbSplitFilter.blue = [10, -10]; // Move blue channel diagonally
 
-                                // descriptionText.filters = [rgbSplitFilter];
-
-                                // const waveShader = new PIXI.Filter(null, `
-                                //     precision mediump float;
-                                //     varying vec2 vTextureCoord;
-                                //     uniform sampler2D uSampler;
-                                //     uniform float u_time;
-                                    
-                                //     void main() {
-                                //         vec2 uv = vTextureCoord;
-                                //         uv.y += sin(uv.x * 10.0 + u_time) * 0.02; // Apply wave effect
-                                //         gl_FragColor = texture2D(uSampler, uv);
-                                //     }
-                                // `, {
-                                //     u_time: 0
-                                // });
-
-                                // // Apply shader to sprite
-                                // textContainer.filters = [waveShader];
-
-                                // // Animate the shader
-                                // app.ticker.add(delta => {
-                                //     waveShader.uniforms.u_time += 0.05 * delta;
-                                // });
-
-                                const fragmentShader = `
+                            //  Wavy Text Effect
+                                const wavyFragmentShader = `
                                     precision mediump float;
                                     varying vec2 vTextureCoord;
                                     uniform sampler2D uSampler;
@@ -470,25 +479,60 @@
                                     }
                                 `;
 
-                                const uniforms = {
+                                const wavyShaderUniforms = {
                                     time: 1,
                                     
-                                    amplitudeY: 0.005, // Lowered for a softer vertical effect
-                                    frequencyY: 9.0,
-                                    speedY: 0.5, 
+                                    amplitudeY: 0.009, // Lowered for a softer vertical effect
+                                    frequencyY: 11.0,
+                                    speedY: 0.6, 
 
                                     amplitudeX: 0.002, // Lowered for a subtle horizontal effect
                                     frequencyX: 3.0,
                                     speedX: 0.4
                                 };
 
-                                const wavyFilter = new PIXI.Filter(null, fragmentShader, uniforms);
+                                const wavyFilter = new PIXI.Filter(null, wavyFragmentShader, wavyShaderUniforms);
                                 wavyFilter.padding = 20;  // Increase padding to allow movement beyond bounds
                                 textContainer.filters = [wavyFilter];
 
                                 app.ticker.add((delta) => {
                                     wavyFilter.uniforms.time += 0.05 * delta;
                                 });
+
+
+                            // Apply the RGB Split filter
+                                // let rgbSplitFilter = new PIXI.filters.RGBSplitFilter();
+                                // rgbSplitFilter.red = [-10, 0];
+                                // rgbSplitFilter.green = [0, 10];
+                                // rgbSplitFilter.blue = [10, -10];
+
+                                // descriptionText.filters = [rgbSplitFilter];
+
+                                // const waveShader = new PIXI.Filter(null, `
+                                //     precision mediump float;
+                                //     varying vec2 vTextureCoord;
+                                //     uniform sampler2D uSampler;
+                                //     uniform float u_time;
+                                    
+                                //     void main() {
+                                //         vec2 uv = vTextureCoord;
+                                //         uv.y += sin(uv.x * 10.0 + u_time) * 0.02; // Apply wave effect
+                                //         gl_FragColor = texture2D(uSampler, uv);
+                                //     }
+                                // `, {
+                                //     u_time: 0
+                                // });
+
+                                // // Apply shader to sprite
+                                // textContainer.filters = [waveShader];
+
+                                // // Animate the shader
+                                // app.ticker.add(delta => {
+                                //     waveShader.uniforms.u_time += 0.05 * delta;
+                                // });
+
+
+
 
 
 
