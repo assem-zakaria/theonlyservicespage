@@ -223,6 +223,7 @@ Version: 1.00
         #services_list_section button div {
             position: relative;
             overflow: hidden;
+            pointer-events: none;
         }
 
         #services_list_section button div img {
