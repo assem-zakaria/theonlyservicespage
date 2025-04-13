@@ -157,10 +157,10 @@
                         <circle cx="100" cy="100" r="80" fill="none" stroke="#00DFFF" stroke-width="7"
                             stroke-dasharray="502" stroke-dashoffset="502"/>
                     </svg>
-                    <span>01</span>
-                    <span>02</span>
-                    <span>03</span>
-                    <span>04</span>
+                    <!-- <span>01</span> -->
+                    <!-- <span>02</span> -->
+                    <!-- <span>03</span> -->
+                    <!-- <span>04</span> -->
                 </div>
 
     
@@ -196,7 +196,6 @@
                     <img src="./images/project-fs-4.jpg">
                 </div>
 
-
             </section>
 
             <section class="other-contents">
@@ -213,20 +212,10 @@
 
     <!-- Begin JavaScript Files -->
         <script src="js/gsap.min.js"></script>
-        <script src="js/three.js"></script>
         <script src="js/ScrollTrigger.min.js"></script>
-        <script src="js/DrawSVGPlugin3.min.js"></script>
-        <script src="js/split-text.js"></script>
-        <script src="js/swiper-bundle.min.js"></script>
+        <!-- <script src="js/DrawSVGPlugin3.min.js"></script> -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/pixi-filters@latest/dist/browser/pixi-filters.min.js"></script>
-
-
-
-
-
-
-
+        <!-- <script src="https://cdn.jsdelivr.net/npm/pixi-filters@latest/dist/browser/pixi-filters.min.js"></script> -->
 
         
     <!-- End JavaScript Files -->
@@ -241,430 +230,16 @@
                 //  Variables
                     const item_els = gsap.utils.toArray('.service-list-item');
 
-                //  PIXI Canvas
-                    //  Create App
-                        const canvas = document.getElementById('serviceCanvas');
-                        const app = new PIXI.Application({
-                            width: window.innerWidth - 5,
-                            height: window.innerHeight,
-                            backgroundAlpha: 0, 
-                            view: canvas, 
-                        });
-
-                    //  Background Image
-                        let bgSprite = null;
-
-                        PIXI.Assets.load('./images/project-fs-2.jpg').then((texture) => {
-                            if (!texture) {
-                                console.error('Failed to load texture');
-                                return;
-                            }
-
-                            if (!bgSprite) { 
-                                bgSprite = new PIXI.Sprite(texture);
-                                bgSprite.anchor.set(0.5);
-                                app.stage.addChildAt(bgSprite, 0);
-
-                                const vertexShader = `
-                                  precision mediump float;
-
-                                  attribute vec2 aVertexPosition;
-                                  attribute vec2 aTextureCoord;
-
-                                  uniform mat3 projectionMatrix;
-
-                                  varying vec2 vTextureCoord;
-
-                                  void main() {
-                                    vTextureCoord = aTextureCoord;
-                                    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
-                                  }
-                                `;
-
-                                const fragmentShader = `
-                                  precision mediump float;
-
-                                  varying vec2 vTextureCoord;
-                                  uniform sampler2D uSampler;
-                                  uniform vec2 sphereCenter;
-                                  uniform float sphereRadius;
-                                  uniform float focusFactor;
-                                  uniform float chromaticAberrationFactor;
-                                  uniform float aspectRatio;
-
-                                  vec2 getDistortedUv(vec2 uv, vec2 direction, float factor) {
-                                    return uv - direction * factor;
-                                  }
-
-                                  void main() {
-                                    vec2 uv = vTextureCoord;
-
-                                    // Correct distance and direction calculations for aspect ratio
-                                    vec2 p = vec2(
-                                      (uv.x - sphereCenter.x) * aspectRatio,
-                                      uv.y - sphereCenter.y
-                                    );
-
-                                    float d = length(p);
-                                    vec2 distortionDirection = normalize(p);
-
-                                    float focusRadius = sphereRadius * focusFactor;
-                                    float focusStrength = sphereRadius / 2.0;
-
-                                    float focusSdf = d - focusRadius;
-                                    float sphereSdf = d - sphereRadius;
-
-                                    float edge = 0.02;
-                                    float inside = 1.0 - smoothstep(0.0, edge, sphereSdf);
-
-                                    float magnifierFactor = focusSdf / (sphereRadius - focusRadius);
-                                    float mFactor = clamp(magnifierFactor * inside, 0.0, 1.0);
-                                    mFactor = pow(mFactor, 4.0);
-
-                                    vec3 distortionFactors = vec3(
-                                      mFactor * focusStrength * (1.0 + chromaticAberrationFactor),
-                                      mFactor * focusStrength,
-                                      mFactor * focusStrength * (1.0 - chromaticAberrationFactor)
-                                    );
-
-                                    vec2 uvR = getDistortedUv(uv, distortionDirection, distortionFactors.r);
-                                    vec2 uvG = getDistortedUv(uv, distortionDirection, distortionFactors.g);
-                                    vec2 uvB = getDistortedUv(uv, distortionDirection, distortionFactors.b);
-
-                                    float r = texture2D(uSampler, uvR).r;
-                                    float g = texture2D(uSampler, uvG).g;
-                                    float b = texture2D(uSampler, uvB).b;
-
-                                    gl_FragColor = vec4(r, g, b, 1.0);
-                                  }
-                                `;
-
-                                const aspectRatio = document.querySelector("#serviceCanvas").getBoundingClientRect().width / document.querySelector("#serviceCanvas").getBoundingClientRect().height;
-
-                                const lensFilter = new PIXI.Filter(vertexShader, fragmentShader, {
-                                  sphereCenter: [1.5, 1.5],
-                                  sphereRadius: 0.15,
-                                  focusFactor: 0.35,
-                                  chromaticAberrationFactor: 0.1,
-                                  aspectRatio: aspectRatio
-                                });
-
-                                window.addEventListener("resize", () => {
-                                  lensFilter.uniforms.aspectRatio = document.querySelector("#serviceCanvas").getBoundingClientRect().width / document.querySelector("#serviceCanvas").getBoundingClientRect().height;
-                                });
-
-                                app.stage.filters = [lensFilter];
-                                app.stage.interactive = true;
-
-
-                                document.querySelector("#serviceCanvas").addEventListener('pointermove', (event) => {
-                                    const globalX = event.clientX;
-                                    const globalY = event.clientY;
-
-                                    const screenWidth = window.innerWidth;
-                                    const screenHeight = window.innerHeight;
-
-                                    const normalizedX = Math.min(Math.max(globalX / screenWidth, 0), 1);
-                                    const normalizedY = Math.min(Math.max(globalY / screenHeight, 0), 1);
-
-                                    gsap.to(lensFilter.uniforms.sphereCenter, {
-                                        duration: 1.5,
-                                        0: normalizedX, // x
-                                        1: normalizedY, // y
-                                        ease: "power4.out"
-                                    });
-                                });
-
-                            }
-
-                            // Function to scale and position the background
-                            function resizeBackground() {
-                                console.log("resizeBackground triggered");
-
-                                const canvasWidth = app.renderer.width;
-                                const canvasHeight = app.renderer.height;
-                                const imgWidth = bgSprite.texture.width;
-                                const imgHeight = bgSprite.texture.height;
-
-                                // Scale to cover the canvas while maintaining aspect ratio
-                                const scale = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
-                                bgSprite.scale.set(scale);
-
-                                // Center the image
-                                bgSprite.x = canvasWidth / 2;
-                                bgSprite.y = canvasHeight / 2;
-                            }
-
-                            // Initial resize
-                            resizeBackground();
-
-                            // Listen for window resize events
-                            window.addEventListener('resize', () => {
-                                app.renderer.resize(window.innerWidth - 5, window.innerHeight);
-                                resizeBackground(); // Only update the sprite, do NOT reload assets
-                            });
-
-                        }).catch((err) => {
-                            console.error('Error loading image:', err);
-                        });
-
-                    //  Text
-                        const textContainer = new PIXI.Container();
-                        const padding = 50;
-                        const spacing = 70;
-                        let bottomY = app.screen.height - padding;
-
-                        // Function to update text metrics dynamically (widths + font sizes)
-                        function updateTextMetrics() {
-                            const screenWidth = app.screen.width;
-
-                            return {
-                                headingTextWidth: screenWidth * 0.9,
-                                descriptionTextWidth: screenWidth * 0.6,
-                                headingFontSize: Math.min(Math.max(screenWidth * 0.08, 40), 90),         // min 40px, max 90px
-                                descriptionFontSize: Math.min(Math.max(screenWidth * 0.025, 16), 30)     // min 16px, max 30px
-                            };
-                        }
-
-                        // Function to create text styles
-                        function createTextStyles() {
-                            const {
-                                headingTextWidth,
-                                descriptionTextWidth,
-                                headingFontSize,
-                                descriptionFontSize
-                            } = updateTextMetrics();
-
-                            return {
-                                headingStyle: new PIXI.TextStyle({
-                                    fontFamily: 'Arial',
-                                    fontSize: headingFontSize,
-                                    fontWeight: 'bold',
-                                    fill: '#ffffff',
-                                    wordWrap: true,
-                                    wordWrapWidth: headingTextWidth,
-                                    resolution: window.devicePixelRatio || 1
-                                }),
-                                descriptionStyle: new PIXI.TextStyle({
-                                    fontFamily: 'Arial',
-                                    fontSize: descriptionFontSize,
-                                    fill: '#ffffff',
-                                    lineHeight: descriptionFontSize * 1.2,
-                                    wordWrap: true,
-                                    wordWrapWidth: descriptionTextWidth,
-                                    resolution: window.devicePixelRatio || 1
-                                })
-                            };
-                        }
-
-                        // Initialize styles and texts
-                        let { headingStyle, descriptionStyle } = createTextStyles();
-
-                        const headingText = new PIXI.Text('DIGITAL TRANSFORMATION', headingStyle);
-                        const descriptionText = new PIXI.Text(
-                            "We don’t just navigate technology—we harness it. Every click and interaction reflects your brand’s identity, shaping a digital presence that moves in sync with your vision.",
-                            descriptionStyle
-                        );
-
-                        textContainer.addChild(headingText);
-                        textContainer.addChild(descriptionText);
-                        app.stage.addChild(textContainer);
-
-                        // Function to align texts vertically
-                        function alignText() {
-                            const {
-                                headingTextWidth,
-                                descriptionTextWidth
-                            } = updateTextMetrics();
-
-                            // Update word wrap widths in styles
-                            headingText.style.wordWrapWidth = headingTextWidth;
-                            descriptionText.style.wordWrapWidth = descriptionTextWidth;
-
-                            descriptionText.x = padding;
-                            descriptionText.y = bottomY - descriptionText.height;
-                            headingText.x = padding;
-                            headingText.y = bottomY - headingText.height - descriptionText.height;
-                        }
-
-                        // Initial alignment
-                        alignText();
-
-                        // Handle window resizing
-                        window.addEventListener("resize", () => {
-                            ({ headingStyle, descriptionStyle } = createTextStyles());
-
-                            headingText.style = headingStyle;
-                            descriptionText.style = descriptionStyle;
-
-                            alignText();
-                        });
-
-                    //  Moving Cursor Stuff
-                        // PIXI.Assets.load('./images/displace_high_contrast.png').then((displacementRingTexture) => {
-
-                        //     const displacementRingSprite = new PIXI.Sprite(displacementRingTexture);
-                        //     displacementRingSprite.width = 300;
-                        //     displacementRingSprite.height = 300;
-                        //     displacementRingSprite.anchor.set(0.5);
-                        //     displacementRingSprite.x = app.screen.width / 2;
-                        //     displacementRingSprite.y = app.screen.height / 2;
-
-                        //     app.stage.addChild(displacementRingSprite);
-
-                        //     const displacementRingFilter = new PIXI.filters.DisplacementFilter(displacementRingSprite);
-                        //     displacementRingFilter.scale.set(-90, -90);
-
-                        //     // Define the RGB Split Shader (Only on Edges)
-                        //     const rgbSplitFilter = new PIXI.Filter(null, `
-
-                        //         precision highp float;
-
-                        //         varying vec2 vTextureCoord;
-                        //         uniform sampler2D uSampler;
-                        //         uniform vec2 uOffset;
-                        //         uniform float time;
-
-                        //         float random(vec2 co) {
-                        //             return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-                        //         }
-
-                        //         void main(void) {
-                        //             vec4 originalColor = texture2D(uSampler, vTextureCoord);
-
-                        //             // Distance from left (0.0) and right (1.0)
-                        //             float edgeFactor = smoothstep(0.0, 0.1, vTextureCoord.x) * (1.0 - smoothstep(0.9, 1.0, vTextureCoord.x));
-
-                        //             // Invert edge factor to only affect left/right edges (not center)
-                        //             edgeFactor = 1.0 - edgeFactor;
-
-                        //             // RGB split
-                        //             vec4 colorR = texture2D(uSampler, vTextureCoord + uOffset * edgeFactor);
-                        //             vec4 colorG = texture2D(uSampler, vTextureCoord);
-                        //             vec4 colorB = texture2D(uSampler, vTextureCoord - uOffset * edgeFactor);
-
-                        //             vec4 rgb = vec4(colorR.r, colorG.g, colorB.b, originalColor.a);
-
-                        //             // Add animated noise
-                        //             float noise = random(vTextureCoord * time) * 0.1;
-                        //             gl_FragColor = vec4(rgb.rgb + noise, rgb.a);
-                        //         }
-                        //     `, {
-                        //         uOffset: new PIXI.Point(0.025, 0.025),
-                        //         time: 0
-                        //     });
-
-                        //     app.stage.filters = [displacementRingFilter, rgbSplitFilter];
-
-                        //     // Animate the RGB Split Effect
-                        //     let time = 0;
-                        //     app.ticker.add(() => {
-                        //         time += 0.011;
-                        //         rgbSplitFilter.uniforms.uOffset.x = Math.sin(time) * 0.03;
-                        //         // rgbSplitFilter.uniforms.uOffset.y = Math.sin(time) * 0.09;
-                        //         rgbSplitFilter.uniforms.time = time;
-                        //     });
-
-                        //     // Mousemove Event for Displacement Effect
-                        //     canvas.addEventListener("mousemove", (event) => {
-                        //         const rect = canvas.getBoundingClientRect();
-                        //         const x = event.clientX - rect.left;
-                        //         const y = event.clientY - rect.top;
-
-                        //         gsap.to(displacementRingSprite, {
-                        //             x: x,
-                        //             y: y,
-                        //             duration: 1.5,
-                        //             ease: "power3.out"
-                        //         });
-                        //     });
-
-                        // }).catch((err) => {
-                        //     console.error('Error loading displacement texture:', err);
-                        // });
-
-                    //  Wavy Text Effect
-                        const wavyFragmentShader = `
-                            precision mediump float;
-
-                            varying vec2 vTextureCoord;
-                            uniform sampler2D uSampler;
-                            uniform float time;
-                            
-                            uniform float amplitudeY;  // Vertical wave height
-                            uniform float frequencyY;  // Vertical wave frequency
-                            uniform float speedY;      // Vertical wave speed
-                            
-                            uniform float amplitudeX;  // Horizontal wave height
-                            uniform float frequencyX;  // Horizontal wave frequency
-                            uniform float speedX;      // Horizontal wave speed
-                            
-                            void main(void) {
-                                vec2 uv = vTextureCoord;
-
-                                // Vertical wave effect
-                                uv.y += sin(uv.x * frequencyY + time * speedY) * amplitudeY;
-                                uv.y += sin(uv.x * (frequencyY * 0.7) + time * (speedY * 1.3)) * (amplitudeY * 0.7);
-
-                                // Horizontal wave effect (subtle left-right movement)
-                                uv.x += cos(uv.y * frequencyX + time * speedX) * amplitudeX;
-                                uv.x += cos(uv.y * (frequencyX * 0.8) + time * (speedX * 1.1)) * (amplitudeX * 0.5);
-
-                                gl_FragColor = texture2D(uSampler, uv);
-                            }
-                        `;
-
-                        const wavyShaderUniforms = {
-                            time: 1,
-                            
-                            amplitudeY: 0.010, // Lowered for a softer vertical effect
-                            frequencyY: 21.0,
-                            speedY: 0.8, 
-
-                            amplitudeX: 0.002, // Lowered for a subtle horizontal effect
-                            frequencyX: 3.0,
-                            speedX: 0.2
-                        };
-
-                        const wavyFilter = new PIXI.Filter(null, wavyFragmentShader, wavyShaderUniforms);
-                        wavyFilter.padding = 20;  // Increase padding to allow movement beyond bounds
-                        textContainer.filters = [wavyFilter];
-
-                        app.ticker.add((delta) => {
-                            wavyFilter.uniforms.time += 0.05 * delta;
-                        });
-
-                    //  Apply the RGB Split filter
-                        // let rgbSplitFilter = new PIXI.filters.RGBSplitFilter();
-                        // rgbSplitFilter.red = [-10, 0];
-                        // rgbSplitFilter.green = [0, 10];
-                        // rgbSplitFilter.blue = [10, -10];
-
-                        // descriptionText.filters = [rgbSplitFilter];
-
-                        // const waveShader = new PIXI.Filter(null, `
-                        //     precision mediump float;
-                        //     varying vec2 vTextureCoord;
-                        //     uniform sampler2D uSampler;
-                        //     uniform float u_time;
-                            
-                        //     void main() {
-                        //         vec2 uv = vTextureCoord;
-                        //         uv.y += sin(uv.x * 10.0 + u_time) * 0.02; // Apply wave effect
-                        //         gl_FragColor = texture2D(uSampler, uv);
-                        //     }
-                        // `, {
-                        //     u_time: 0
-                        // });
-
-                        // // Apply shader to sprite
-                        // textContainer.filters = [waveShader];
-
-                        // // Animate the shader
-                        // app.ticker.add(delta => {
-                        //     waveShader.uniforms.u_time += 0.05 * delta;
-                        // });
-
+                //  Add number of slides in project progress
+                    const slide_items = document.querySelectorAll('#proj_screens .proj-screen-item');
+                    const progressContainer = document.getElementById('proj_screens_progress');
+
+                    // Loop through the items and create <span> elements
+                    slide_items.forEach((_, index) => {
+                      const span = document.createElement('span');
+                      span.textContent = (index + 1).toString().padStart(2, '0'); // format as 01, 02, etc.
+                      progressContainer.appendChild(span);
+                    });
 
                 //  Desktop Function
                     function desktopFunction() {
@@ -686,7 +261,6 @@
                                   start: "top 90%",
                                   end: "+=1000px",
                                   scrub: 1.5,
-                                  // markers: true
                                 }
                               })
                             });
@@ -708,36 +282,34 @@
                                     scrub: 1,
                                     ease: 'none',
                                     onUpdate: function (self) {
-                                        
-                                        let progress = self.progress * 100;
-                                        let mappedProgress = 501 + (progress / 100) * (1010 - 501);
-                                        console.log(mappedProgress.toFixed(2));
+                                        const progress = self.progress * 100;
+                                        const mappedProgress = 501 + (progress / 100) * (1010 - 501);
 
-                                        gsap.to(document.querySelector("#proj_screens_progress").querySelector("svg circle:nth-of-type(2)"), {
+                                        // Animate the strokeDasharray
+                                        const circle = document.querySelector("#proj_screens_progress svg circle:nth-of-type(2)");
+                                        gsap.to(circle, {
                                             strokeDasharray: mappedProgress.toFixed(2)
                                         });
 
-                                        if (progress <= 25) {
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span").forEach(el => {
+                                        // Get dynamic elements
+                                        const items = document.querySelectorAll("#proj_screens .proj-screen-item");
+                                        const spans = document.querySelectorAll("#proj_screens #proj_screens_progress span");
+
+                                        const itemCount = items.length;
+                                        const segmentSize = 100 / itemCount;
+
+                                        // Find current segment index based on progress
+                                        let activeIndex = Math.floor(progress / segmentSize);
+                                        if (activeIndex >= itemCount) activeIndex = itemCount - 1;
+
+                                        // Update span visibility
+                                        spans.forEach((el, index) => {
+                                            if (index === activeIndex) {
+                                                el.classList.add("show");
+                                            } else {
                                                 el.classList.remove("show");
-                                            });
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span")[0].classList.add("show");
-                                        } else if (progress <= 50) {
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span").forEach(el => {
-                                                el.classList.remove("show");
-                                            });
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span")[1].classList.add("show");
-                                        } else if (progress <= 75) {
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span").forEach(el => {
-                                                el.classList.remove("show");
-                                            });
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span")[2].classList.add("show");
-                                        } else {
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span").forEach(el => {
-                                                el.classList.remove("show");
-                                            });
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span")[3].classList.add("show");
-                                        }
+                                            }
+                                        });
                                     },
                                 }
                             });
@@ -761,7 +333,6 @@
                                 }, "<");
 
                             });
-
 
                         window.addEventListener("load", () => {
                             ScrollTrigger.refresh();
@@ -792,9 +363,8 @@
                                 scrollTrigger: {
                                   trigger: item,
                                   start: "top 80%",
-                                  end: "+=700px",
+                                  end: "+=1000px",
                                   scrub: 0.5,
-                                  // markers: true
                                 }
                               })
                             });
@@ -815,36 +385,34 @@
                                     scrub: 1,
                                     ease: 'none',
                                     onUpdate: function (self) {
-                                        
-                                        let progress = self.progress * 100;
-                                        let mappedProgress = 501 + (progress / 100) * (1010 - 501);
-                                        console.log(mappedProgress.toFixed(2));
+                                        const progress = self.progress * 100;
+                                        const mappedProgress = 501 + (progress / 100) * (1010 - 501);
 
-                                        gsap.to(document.querySelector("#proj_screens_progress").querySelector("svg circle:nth-of-type(2)"), {
+                                        // Animate the strokeDasharray
+                                        const circle = document.querySelector("#proj_screens_progress svg circle:nth-of-type(2)");
+                                        gsap.to(circle, {
                                             strokeDasharray: mappedProgress.toFixed(2)
                                         });
 
-                                        if (progress <= 25) {
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span").forEach(el => {
+                                        // Get dynamic elements
+                                        const items = document.querySelectorAll("#proj_screens .proj-screen-item");
+                                        const spans = document.querySelectorAll("#proj_screens #proj_screens_progress span");
+
+                                        const itemCount = items.length;
+                                        const segmentSize = 100 / itemCount;
+
+                                        // Find current segment index based on progress
+                                        let activeIndex = Math.floor(progress / segmentSize);
+                                        if (activeIndex >= itemCount) activeIndex = itemCount - 1;
+
+                                        // Update span visibility
+                                        spans.forEach((el, index) => {
+                                            if (index === activeIndex) {
+                                                el.classList.add("show");
+                                            } else {
                                                 el.classList.remove("show");
-                                            });
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span")[0].classList.add("show");
-                                        } else if (progress <= 50) {
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span").forEach(el => {
-                                                el.classList.remove("show");
-                                            });
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span")[1].classList.add("show");
-                                        } else if (progress <= 75) {
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span").forEach(el => {
-                                                el.classList.remove("show");
-                                            });
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span")[2].classList.add("show");
-                                        } else {
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span").forEach(el => {
-                                                el.classList.remove("show");
-                                            });
-                                            document.querySelectorAll("#proj_screens #proj_screens_progress span")[3].classList.add("show");
-                                        }
+                                            }
+                                        });
                                     },
                                 }
                             });
@@ -866,9 +434,409 @@
                     }
 
                 //  Both Desktop and Mobile
+                    //  PIXI Canvas
+                        //  Create App
+                            const canvas = document.getElementById('serviceCanvas');
+                            const app = new PIXI.Application({
+                                width: window.innerWidth - 5,
+                                height: window.innerHeight,
+                                backgroundAlpha: 0, 
+                                view: canvas, 
+                            });
+
+                        //  Background Image
+                            let bgSprite = null;
+
+                            PIXI.Assets.load('./images/project-fs-2.jpg').then((texture) => {
+                                if (!texture) {
+                                    console.error('Failed to load texture');
+                                    return;
+                                }
+
+                                if (!bgSprite) { 
+                                    bgSprite = new PIXI.Sprite(texture);
+                                    bgSprite.anchor.set(0.5);
+                                    app.stage.addChildAt(bgSprite, 0);
+
+                                    const vertexShader = `
+                                      precision mediump float;
+
+                                      attribute vec2 aVertexPosition;
+                                      attribute vec2 aTextureCoord;
+
+                                      uniform mat3 projectionMatrix;
+
+                                      varying vec2 vTextureCoord;
+
+                                      void main() {
+                                        vTextureCoord = aTextureCoord;
+                                        gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
+                                      }
+                                    `;
+
+                                    const fragmentShader = `
+                                      precision mediump float;
+
+                                      varying vec2 vTextureCoord;
+                                      uniform sampler2D uSampler;
+                                      uniform vec2 sphereCenter;
+                                      uniform float sphereRadius;
+                                      uniform float focusFactor;
+                                      uniform float chromaticAberrationFactor;
+                                      uniform float aspectRatio;
+
+                                      vec2 getDistortedUv(vec2 uv, vec2 direction, float factor) {
+                                        return uv - direction * factor;
+                                      }
+
+                                      void main() {
+                                        vec2 uv = vTextureCoord;
+
+                                        // Correct distance and direction calculations for aspect ratio
+                                        vec2 p = vec2(
+                                          (uv.x - sphereCenter.x) * aspectRatio,
+                                          uv.y - sphereCenter.y
+                                        );
+
+                                        float d = length(p);
+                                        vec2 distortionDirection = normalize(p);
+
+                                        float focusRadius = sphereRadius * focusFactor;
+                                        float focusStrength = sphereRadius / 2.0;
+
+                                        float focusSdf = d - focusRadius;
+                                        float sphereSdf = d - sphereRadius;
+
+                                        float edge = 0.02;
+                                        float inside = 1.0 - smoothstep(0.0, edge, sphereSdf);
+
+                                        float magnifierFactor = focusSdf / (sphereRadius - focusRadius);
+                                        float mFactor = clamp(magnifierFactor * inside, 0.0, 1.0);
+                                        mFactor = pow(mFactor, 4.0);
+
+                                        vec3 distortionFactors = vec3(
+                                          mFactor * focusStrength * (1.0 + chromaticAberrationFactor),
+                                          mFactor * focusStrength,
+                                          mFactor * focusStrength * (1.0 - chromaticAberrationFactor)
+                                        );
+
+                                        vec2 uvR = getDistortedUv(uv, distortionDirection, distortionFactors.r);
+                                        vec2 uvG = getDistortedUv(uv, distortionDirection, distortionFactors.g);
+                                        vec2 uvB = getDistortedUv(uv, distortionDirection, distortionFactors.b);
+
+                                        float r = texture2D(uSampler, uvR).r;
+                                        float g = texture2D(uSampler, uvG).g;
+                                        float b = texture2D(uSampler, uvB).b;
+
+                                        gl_FragColor = vec4(r, g, b, 1.0);
+                                      }
+                                    `;
+
+                                    const aspectRatio = document.querySelector("#serviceCanvas").getBoundingClientRect().width / document.querySelector("#serviceCanvas").getBoundingClientRect().height;
+
+                                    const lensFilter = new PIXI.Filter(vertexShader, fragmentShader, {
+                                      sphereCenter: [1.5, 1.5],
+                                      sphereRadius: 0.15,
+                                      focusFactor: 0.35,
+                                      chromaticAberrationFactor: 0.1,
+                                      aspectRatio: aspectRatio
+                                    });
+
+                                    window.addEventListener("resize", () => {
+                                      lensFilter.uniforms.aspectRatio = document.querySelector("#serviceCanvas").getBoundingClientRect().width / document.querySelector("#serviceCanvas").getBoundingClientRect().height;
+                                    });
+
+                                    app.stage.filters = [lensFilter];
+                                    app.stage.interactive = true;
+
+
+                                    document.querySelector("#serviceCanvas").addEventListener('pointermove', (event) => {
+                                        const globalX = event.clientX;
+                                        const globalY = event.clientY;
+
+                                        const screenWidth = window.innerWidth;
+                                        const screenHeight = window.innerHeight;
+
+                                        const normalizedX = Math.min(Math.max(globalX / screenWidth, 0), 1);
+                                        const normalizedY = Math.min(Math.max(globalY / screenHeight, 0), 1);
+
+                                        gsap.to(lensFilter.uniforms.sphereCenter, {
+                                            duration: 1.5,
+                                            0: normalizedX, // x
+                                            1: normalizedY, // y
+                                            ease: "power4.out"
+                                        });
+                                    });
+
+                                }
+
+                                // Function to scale and position the background
+                                function resizeBackground() {
+                                    console.log("resizeBackground triggered");
+
+                                    const canvasWidth = app.renderer.width;
+                                    const canvasHeight = app.renderer.height;
+                                    const imgWidth = bgSprite.texture.width;
+                                    const imgHeight = bgSprite.texture.height;
+
+                                    // Scale to cover the canvas while maintaining aspect ratio
+                                    const scale = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
+                                    bgSprite.scale.set(scale);
+
+                                    // Center the image
+                                    bgSprite.x = canvasWidth / 2;
+                                    bgSprite.y = canvasHeight / 2;
+                                }
+
+                                // Initial resize
+                                resizeBackground();
+
+                                // Listen for window resize events
+                                window.addEventListener('resize', () => {
+                                    app.renderer.resize(window.innerWidth - 5, window.innerHeight);
+                                    resizeBackground(); // Only update the sprite, do NOT reload assets
+                                });
+
+                            }).catch((err) => {
+                                console.error('Error loading image:', err);
+                            });
+
+                        //  Text
+                            const textContainer = new PIXI.Container();
+                            const padding = 50;
+                            const spacing = 70;
+                            let bottomY = app.screen.height - padding;
+
+                            // Function to update text metrics dynamically (widths + font sizes)
+                            function updateTextMetrics() {
+                                const screenWidth = app.screen.width;
+
+                                return {
+                                    headingTextWidth: screenWidth * 0.9,
+                                    descriptionTextWidth: screenWidth * 0.6,
+                                    headingFontSize: Math.min(Math.max(screenWidth * 0.08, 40), 90),         // min 40px, max 90px
+                                    descriptionFontSize: Math.min(Math.max(screenWidth * 0.025, 16), 30)     // min 16px, max 30px
+                                };
+                            }
+
+                            // Function to create text styles
+                            function createTextStyles() {
+                                const {
+                                    headingTextWidth,
+                                    descriptionTextWidth,
+                                    headingFontSize,
+                                    descriptionFontSize
+                                } = updateTextMetrics();
+
+                                return {
+                                    headingStyle: new PIXI.TextStyle({
+                                        fontFamily: 'Arial',
+                                        fontSize: headingFontSize,
+                                        fontWeight: 'bold',
+                                        fill: '#ffffff',
+                                        wordWrap: true,
+                                        wordWrapWidth: headingTextWidth,
+                                        resolution: window.devicePixelRatio || 1
+                                    }),
+                                    descriptionStyle: new PIXI.TextStyle({
+                                        fontFamily: 'Arial',
+                                        fontSize: descriptionFontSize,
+                                        fill: '#ffffff',
+                                        lineHeight: descriptionFontSize * 1.2,
+                                        wordWrap: true,
+                                        wordWrapWidth: descriptionTextWidth,
+                                        resolution: window.devicePixelRatio || 1
+                                    })
+                                };
+                            }
+
+                            // Initialize styles and texts
+                            let { headingStyle, descriptionStyle } = createTextStyles();
+
+                            const headingText = new PIXI.Text('DIGITAL TRANSFORMATION', headingStyle);
+                            const descriptionText = new PIXI.Text(
+                                "We don’t just navigate technology—we harness it. Every click and interaction reflects your brand’s identity, shaping a digital presence that moves in sync with your vision.",
+                                descriptionStyle
+                            );
+
+                            textContainer.addChild(headingText);
+                            textContainer.addChild(descriptionText);
+                            app.stage.addChild(textContainer);
+
+                            // Function to align texts vertically
+                            function alignText() {
+                                const {
+                                    headingTextWidth,
+                                    descriptionTextWidth
+                                } = updateTextMetrics();
+
+                                // Update word wrap widths in styles
+                                headingText.style.wordWrapWidth = headingTextWidth;
+                                descriptionText.style.wordWrapWidth = descriptionTextWidth;
+
+                                descriptionText.x = padding;
+                                descriptionText.y = bottomY - descriptionText.height;
+                                headingText.x = padding;
+                                headingText.y = bottomY - headingText.height - descriptionText.height;
+                            }
+
+                            // Initial alignment
+                            alignText();
+
+                            // Handle window resizing
+                            window.addEventListener("resize", () => {
+                                ({ headingStyle, descriptionStyle } = createTextStyles());
+
+                                headingText.style = headingStyle;
+                                descriptionText.style = descriptionStyle;
+
+                                alignText();
+                            });
+
+                        //  Wavy Text Effect
+                            // const wavyFragmentShader = `
+                            //     precision mediump float;
+
+                            //     varying vec2 vTextureCoord;
+                            //     uniform sampler2D uSampler;
+                            //     uniform float time;
+                                
+                            //     uniform float amplitudeY;  // Vertical wave height
+                            //     uniform float frequencyY;  // Vertical wave frequency
+                            //     uniform float speedY;      // Vertical wave speed
+                                
+                            //     uniform float amplitudeX;  // Horizontal wave height
+                            //     uniform float frequencyX;  // Horizontal wave frequency
+                            //     uniform float speedX;      // Horizontal wave speed
+                                
+                            //     void main(void) {
+                            //         vec2 uv = vTextureCoord;
+
+                            //         // Vertical wave effect
+                            //         uv.y += sin(uv.x * frequencyY + time * speedY) * amplitudeY;
+                            //         uv.y += sin(uv.x * (frequencyY * 0.7) + time * (speedY * 1.3)) * (amplitudeY * 0.7);
+
+                            //         // Horizontal wave effect (subtle left-right movement)
+                            //         uv.x += cos(uv.y * frequencyX + time * speedX) * amplitudeX;
+                            //         uv.x += cos(uv.y * (frequencyX * 0.8) + time * (speedX * 1.1)) * (amplitudeX * 0.5);
+
+                            //         gl_FragColor = texture2D(uSampler, uv);
+                            //     }
+                            // `;
+
+                            // const wavyShaderUniforms = {
+                            //     time: 1,
+                                
+                            //     amplitudeY: 0.010, // Lowered for a softer vertical effect
+                            //     frequencyY: 21.0,
+                            //     speedY: 0.8, 
+
+                            //     amplitudeX: 0.002, // Lowered for a subtle horizontal effect
+                            //     frequencyX: 3.0,
+                            //     speedX: 0.2
+                            // };
+
+                            // const wavyFilter = new PIXI.Filter(null, wavyFragmentShader, wavyShaderUniforms);
+                            // wavyFilter.padding = 20;  // Increase padding to allow movement beyond bounds
+                            // textContainer.filters = [wavyFilter];
+
+                            // app.ticker.add((delta) => {
+                            //     wavyFilter.uniforms.time += 0.05 * delta;
+                            // });
+
+                            const wavyFragmentShader = `
+                                precision mediump float;
+
+                                varying vec2 vTextureCoord;
+                                uniform sampler2D uSampler;
+                                uniform float time;
+                                
+                                uniform float amplitudeY;
+                                uniform float frequencyY;
+                                uniform float speedY;
+                                
+                                uniform float amplitudeX;
+                                uniform float frequencyX;
+                                uniform float speedX;
+
+                                void main(void) {
+                                    vec2 uv = vTextureCoord;
+
+                                    // Vertical wave
+                                    uv.y += sin(uv.x * frequencyY + time * speedY) * amplitudeY;
+                                    uv.y += sin(uv.x * (frequencyY * 0.7) + time * (speedY * 1.3)) * (amplitudeY * 0.7);
+
+                                    // Horizontal wave
+                                    uv.x += cos(uv.y * frequencyX + time * speedX) * amplitudeX;
+                                    uv.x += cos(uv.y * (frequencyX * 0.8) + time * (speedX * 1.1)) * (amplitudeX * 0.5);
+
+                                    gl_FragColor = texture2D(uSampler, uv);
+                                }
+                            `;
+
+                            // Initial uniforms (for wide screens)
+                            const defaultUniforms = {
+                                amplitudeY: 0.010,
+                                frequencyY: 21.0,
+                                speedY: 0.8,
+
+                                amplitudeX: 0.002,
+                                frequencyX: 3.0,
+                                speedX: 0.2
+                            };
+
+                            // Create uniforms object with initial values
+                            const wavyShaderUniforms = {
+                                time: 1.0,
+                                ...defaultUniforms
+                            };
+
+                            const wavyFilter = new PIXI.Filter(null, wavyFragmentShader, wavyShaderUniforms);
+                            wavyFilter.padding = 20;
+                            textContainer.filters = [wavyFilter];
+
+                            app.ticker.add((delta) => {
+                                wavyFilter.uniforms.time += 0.05 * delta;
+                            });
+
+                            // Resize handler to adjust effect intensity based on screen width
+                            function updateWaveIntensity() {
+                                const width = window.innerWidth;
+
+                                if (width < 768) {
+                                    // Small screens – reduce effect intensity
+                                    wavyFilter.uniforms.amplitudeY = 0.004;
+                                    wavyFilter.uniforms.frequencyY = 18.0;
+                                    wavyFilter.uniforms.speedY = 0.6;
+
+                                    wavyFilter.uniforms.amplitudeX = 0.001;
+                                    wavyFilter.uniforms.frequencyX = 2.0;
+                                    wavyFilter.uniforms.speedX = 0.1;
+                                } else if (width < 1024) {
+                                    // Medium screens – slightly reduce
+                                    wavyFilter.uniforms.amplitudeY = 0.007;
+                                    wavyFilter.uniforms.frequencyY = 20.0;
+                                    wavyFilter.uniforms.speedY = 0.7;
+
+                                    wavyFilter.uniforms.amplitudeX = 0.0015;
+                                    wavyFilter.uniforms.frequencyX = 2.5;
+                                    wavyFilter.uniforms.speedX = 0.15;
+                                } else {
+                                    // Large screens – default intensity
+                                    Object.assign(wavyFilter.uniforms, defaultUniforms);
+                                }
+                            }
+
+                            // Initial intensity setup
+                            updateWaveIntensity();
+
+                            // Attach resize listener
+                            window.addEventListener('resize', updateWaveIntensity);
+
                     //  Service Items Show More Button Event
                         item_els.forEach(el => {
                             el.querySelector("button").addEventListener("click", (event) => {
+                                console.log("button")
                                 const button = event.target;
                                 const nextEl = button.nextElementSibling;
 
@@ -910,18 +878,19 @@
                         console.log("HOME PAGE FUNCTION")
 
                         //  GSAP Config
-                            gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin);
+                            // gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin);
+                            gsap.registerPlugin(ScrollTrigger);
                             gsap.config({ force3D: true, trialWarn: false });
                             // ScrollTrigger.config({ ignoreMobileResize: true, fastScrollEnd: true });
 
                         //  Update ScrollTrigger on resize
-                            // let resizeTimeout;
-                            // window.addEventListener("resize", () => {
-                            //   clearTimeout(resizeTimeout);
-                            //   resizeTimeout = setTimeout(() => {
-                            //     ScrollTrigger.refresh();
-                            //   }, 200);
-                            // });
+                            let resizeTimeout;
+                            window.addEventListener("resize", () => {
+                              clearTimeout(resizeTimeout);
+                              resizeTimeout = setTimeout(() => {
+                                ScrollTrigger.refresh();
+                              }, 200);
+                            });
 
                         //  GSAP Media Query
                             let gsapMediaQueries = gsap.matchMedia();
