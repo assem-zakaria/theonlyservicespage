@@ -213,9 +213,7 @@
     <!-- Begin JavaScript Files -->
         <script src="js/gsap.min.js"></script>
         <script src="js/ScrollTrigger.min.js"></script>
-        <!-- <script src="js/DrawSVGPlugin3.min.js"></script> -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
-        <!-- <script src="https://cdn.jsdelivr.net/npm/pixi-filters@latest/dist/browser/pixi-filters.min.js"></script> -->
 
         
     <!-- End JavaScript Files -->
@@ -226,16 +224,14 @@
             
             (function () {
 
-                console.log("UPDATED")
-
                 //  Variables
                     const item_els = gsap.utils.toArray('.service-list-item');
-
-                //  Add number of slides in project progress
                     const slide_items = document.querySelectorAll('#proj_screens .proj-screen-item');
                     const progressContainer = document.getElementById('proj_screens_progress');
+                    const canvas_el = document.getElementById('serviceCanvas');
 
-                    // Loop through the items and create <span> elements
+
+                // Loop through the items and create <span> elements
                     slide_items.forEach((_, index) => {
                       const span = document.createElement('span');
                       span.textContent = (index + 1).toString().padStart(2, '0'); // format as 01, 02, etc.
@@ -268,8 +264,8 @@
                             
 
                         //  Projects Screen
-                            document.querySelectorAll(".proj-screen-item").forEach((el, index) => {
-                                el.style.zIndex = document.querySelectorAll(".proj-screen-item").length - index;
+                            slide_items.forEach((el, index) => {
+                                el.style.zIndex = slide_items.length - index;
                                 gsap.set(el, { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)" });
                             });
 
@@ -315,10 +311,10 @@
                                 }
                             });
 
-                            const elements = gsap.utils.toArray(".proj-screen-item:not(:last-child)");
+                            const elements_except_last = gsap.utils.toArray(".proj-screen-item:not(:last-child)");
 
                             // Animate each element individually
-                            elements.forEach((item, index) => {
+                            elements_except_last.forEach((item, index) => {
 
                                 hero_section_tl.to(item, {
                                     css: { 
@@ -332,7 +328,6 @@
                                     scale: 1.3,
                                     stagger: 0.5,
                                 }, "<");
-
                             });
 
                         window.addEventListener("load", () => {
@@ -371,8 +366,8 @@
                             });
                         
                         //  Projects Screen
-                            document.querySelectorAll(".proj-screen-item").forEach((el, index) => {
-                                el.style.zIndex = document.querySelectorAll(".proj-screen-item").length - index;
+                            slide_items.forEach((el, index) => {
+                                el.style.zIndex = slide_items.length - index;
                                 gsap.set(el, { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)" });
                             });
 
@@ -418,10 +413,10 @@
                                 }
                             });
 
-                            const elements = gsap.utils.toArray(".proj-screen-item:not(:last-child)");
+                            const elements_except_last = gsap.utils.toArray(".proj-screen-item:not(:last-child)");
 
                             // Animate each element individually
-                            elements.forEach((item, index) => {
+                            elements_except_last.forEach((item, index) => {
                                 hero_section_tl.to(item, {
                                     css: { 
                                         clipPath: "polygon(0px 0%, 100% 0px, 100% 0px, 0px 0px)",
@@ -435,14 +430,14 @@
                     }
 
                 //  Both Desktop and Mobile
+
                     //  PIXI Canvas
                         //  Create App
-                            const canvas = document.getElementById('serviceCanvas');
                             const app = new PIXI.Application({
                                 width: window.innerWidth - 5,
                                 height: window.innerHeight,
                                 backgroundAlpha: 0, 
-                                view: canvas, 
+                                view: canvas_el, 
                             });
 
                         //  Background Image
@@ -533,7 +528,7 @@
                                       }
                                     `;
 
-                                    const aspectRatio = document.querySelector("#serviceCanvas").getBoundingClientRect().width / document.querySelector("#serviceCanvas").getBoundingClientRect().height;
+                                    const aspectRatio = canvas_el.getBoundingClientRect().width / canvas_el.getBoundingClientRect().height;
 
                                     const lensFilter = new PIXI.Filter(vertexShader, fragmentShader, {
                                       sphereCenter: [1.5, 1.5],
@@ -551,22 +546,24 @@
                                     app.stage.interactive = true;
 
 
-                                    document.querySelector("#serviceCanvas").addEventListener('pointermove', (event) => {
-                                        const globalX = event.clientX;
-                                        const globalY = event.clientY;
+                                    canvas_el.addEventListener('pointermove', (event) => {
+                                      if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
 
-                                        const screenWidth = window.innerWidth;
-                                        const screenHeight = window.innerHeight;
+                                      const globalX = event.clientX;
+                                      const globalY = event.clientY;
 
-                                        const normalizedX = Math.min(Math.max(globalX / screenWidth, 0), 1);
-                                        const normalizedY = Math.min(Math.max(globalY / screenHeight, 0), 1);
+                                      const screenWidth = window.innerWidth;
+                                      const screenHeight = window.innerHeight;
 
-                                        gsap.to(lensFilter.uniforms.sphereCenter, {
-                                            duration: 1.5,
-                                            0: normalizedX, // x
-                                            1: normalizedY, // y
-                                            ease: "power4.out"
-                                        });
+                                      const normalizedX = Math.min(Math.max(globalX / screenWidth, 0), 1);
+                                      const normalizedY = Math.min(Math.max(globalY / screenHeight, 0), 1);
+
+                                      gsap.to(lensFilter.uniforms.sphereCenter, {
+                                        duration: 1.5,
+                                        0: normalizedX,
+                                        1: normalizedY,
+                                        ease: "power4.out"
+                                      });
                                     });
 
                                 }
@@ -695,56 +692,6 @@
                             });
 
                         //  Wavy Text Effect
-                            // const wavyFragmentShader = `
-                            //     precision mediump float;
-
-                            //     varying vec2 vTextureCoord;
-                            //     uniform sampler2D uSampler;
-                            //     uniform float time;
-                                
-                            //     uniform float amplitudeY;  // Vertical wave height
-                            //     uniform float frequencyY;  // Vertical wave frequency
-                            //     uniform float speedY;      // Vertical wave speed
-                                
-                            //     uniform float amplitudeX;  // Horizontal wave height
-                            //     uniform float frequencyX;  // Horizontal wave frequency
-                            //     uniform float speedX;      // Horizontal wave speed
-                                
-                            //     void main(void) {
-                            //         vec2 uv = vTextureCoord;
-
-                            //         // Vertical wave effect
-                            //         uv.y += sin(uv.x * frequencyY + time * speedY) * amplitudeY;
-                            //         uv.y += sin(uv.x * (frequencyY * 0.7) + time * (speedY * 1.3)) * (amplitudeY * 0.7);
-
-                            //         // Horizontal wave effect (subtle left-right movement)
-                            //         uv.x += cos(uv.y * frequencyX + time * speedX) * amplitudeX;
-                            //         uv.x += cos(uv.y * (frequencyX * 0.8) + time * (speedX * 1.1)) * (amplitudeX * 0.5);
-
-                            //         gl_FragColor = texture2D(uSampler, uv);
-                            //     }
-                            // `;
-
-                            // const wavyShaderUniforms = {
-                            //     time: 1,
-                                
-                            //     amplitudeY: 0.010, // Lowered for a softer vertical effect
-                            //     frequencyY: 21.0,
-                            //     speedY: 0.8, 
-
-                            //     amplitudeX: 0.002, // Lowered for a subtle horizontal effect
-                            //     frequencyX: 3.0,
-                            //     speedX: 0.2
-                            // };
-
-                            // const wavyFilter = new PIXI.Filter(null, wavyFragmentShader, wavyShaderUniforms);
-                            // wavyFilter.padding = 20;  // Increase padding to allow movement beyond bounds
-                            // textContainer.filters = [wavyFilter];
-
-                            // app.ticker.add((delta) => {
-                            //     wavyFilter.uniforms.time += 0.05 * delta;
-                            // });
-
                             const wavyFragmentShader = `
                                 precision mediump float;
 
@@ -837,7 +784,6 @@
                     //  Service Items Show More Button Event
                         item_els.forEach(el => {
                             el.querySelector("button").addEventListener("click", (event) => {
-                                console.log("button")
                                 const button = event.target;
                                 const nextEl = button.nextElementSibling;
 
@@ -857,29 +803,27 @@
                     document.addEventListener("DOMContentLoaded", () => {
                         console.log("DOM fully loaded and parsed");
 
-                        // Wait for all fonts to be fully loaded
-                        document.fonts.ready.then(() => {
-                            console.log("All fonts loaded");
+                        // Wait for all fonts to be fully loaded, unless canvas wont able to choose the correct font
+                            document.fonts.ready.then(() => {
+                                console.log("All fonts loaded");
 
-                            setTimeout(() => {
-                                // Check if the load event has already fired
-                                if (document.readyState === "complete") {
-                                    homePageFunc();
-                                } else {
-                                    window.addEventListener("load", homePageFunc);
-                                }
-                            }, 500);
-
-                        });
+                                setTimeout(() => {
+                                    // Check if the load event has already fired
+                                    if (document.readyState === "complete") {
+                                        servicesPageFunc();
+                                    } else {
+                                        window.addEventListener("load", servicesPageFunc);
+                                    }
+                                }, 500);
+                            });
                     });
 
-                //  Homepage Function
-                    function homePageFunc() {
+                //  Services Page Function
+                    function servicesPageFunc() {
 
-                        console.log("HOME PAGE FUNCTION")
+                        console.log("SERVICES PAGE FUNCTION")
 
                         //  GSAP Config
-                            // gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin);
                             gsap.registerPlugin(ScrollTrigger);
                             gsap.config({ force3D: true, trialWarn: false });
                             // ScrollTrigger.config({ ignoreMobileResize: true, fastScrollEnd: true });
