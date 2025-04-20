@@ -341,10 +341,10 @@
 
                         console.log("mobileFunction");
 
-                        // ScrollTrigger.config({ 
-                        //     ignoreMobileResize: true,
-                        //     autoRefreshEvents: "",
-                        // });
+                        ScrollTrigger.config({ 
+                            ignoreMobileResize: true,
+                            autoRefreshEvents: "",
+                        });
 
 
 
@@ -434,7 +434,7 @@
                     //  PIXI Canvas
                         //  Create App
                             const app = new PIXI.Application({
-                                width: window.innerWidth,
+                                width: document.documentElement.clientWidth,
                                 height: window.innerHeight,
                                 backgroundAlpha: 0, 
                                 view: canvas_el, 
@@ -552,7 +552,7 @@
                                       const globalX = event.clientX;
                                       const globalY = event.clientY;
 
-                                      const screenWidth = window.innerWidth;
+                                      const screenWidth = document.documentElement.clientWidth;
                                       const screenHeight = window.innerHeight;
 
                                       const normalizedX = Math.min(Math.max(globalX / screenWidth, 0), 1);
