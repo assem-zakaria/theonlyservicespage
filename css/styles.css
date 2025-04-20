@@ -165,6 +165,7 @@ Version: 1.00
             position: sticky;
             top: 0;
             left: 0;
+            pointer-events: all;
         }
 
     /* Services List */
@@ -440,6 +441,11 @@ Version: 1.00
     /* Small Devices (Mobile) */
     /* ---------------------- */
         @media only screen and (max-width : 767px) {
+
+            /* Canvas Element */
+                #serviceCanvas {
+                    pointer-events: none;
+                }
 
             /* Services List */
                 #services_list_section {
