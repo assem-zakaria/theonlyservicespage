@@ -77,7 +77,6 @@ Version: 1.00
 
         main {
             box-sizing: border-box;
-            overflow-x: hidden;
         }
 
         p {
@@ -476,7 +475,7 @@ Version: 1.00
 
                 #proj_screens #proj_screens_progress {
                     right: 10px;
-                    bottom: 60px;
+                    bottom: 10px;
                 }
         }
 
