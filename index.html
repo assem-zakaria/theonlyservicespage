@@ -211,8 +211,8 @@
 
 
     <!-- Begin JavaScript Files -->
-        <script src="js/gsap.min.js"></script>
-        <script src="js/ScrollTrigger.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
 
         
@@ -345,6 +345,8 @@
                             ignoreMobileResize: true,
                             autoRefreshEvents: "",
                         });
+
+                        ScrollTrigger.normalizeScroll(true);
 
 
 
