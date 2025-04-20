@@ -341,12 +341,12 @@
 
                         console.log("mobileFunction");
 
-                        ScrollTrigger.config({ 
-                            ignoreMobileResize: true,
-                            autoRefreshEvents: "" 
-                        });
+                        // ScrollTrigger.config({ 
+                        //     ignoreMobileResize: true,
+                        //     autoRefreshEvents: "",
+                        // });
 
-                        ScrollTrigger.normalizeScroll(true)
+
 
                         //  Services List
                             item_els.forEach(item => {
@@ -427,8 +427,6 @@
                                     stagger: 0.5,
                                 });
                             });
-
-
                     }
 
                 //  Both Desktop and Mobile
@@ -829,6 +827,7 @@
                             gsap.registerPlugin(ScrollTrigger);
                             gsap.config({ force3D: true, trialWarn: false });
                             // ScrollTrigger.config({ ignoreMobileResize: true, fastScrollEnd: true });
+
 
                         //  Update ScrollTrigger on resize
                             let resizeTimeout;
