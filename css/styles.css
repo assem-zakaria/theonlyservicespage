@@ -77,7 +77,7 @@ Version: 1.00
 
         main {
             box-sizing: border-box;
-/*             overflow: hidden; */
+            overflow-x: hidden;
         }
 
         p {
