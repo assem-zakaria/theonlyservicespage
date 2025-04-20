@@ -346,6 +346,8 @@
                             autoRefreshEvents: "" 
                         });
 
+                        ScrollTrigger.normalizeScroll(true)
+
                         //  Services List
                             item_els.forEach(item => {
                                 gsap.set(item, { x: 400 });
