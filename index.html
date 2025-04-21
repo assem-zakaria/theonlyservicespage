@@ -574,7 +574,7 @@
                                 function resizeBackground() {
                                     console.log("resizeBackground triggered");
 
-                                    const canvasWidth = app.renderer.width;
+                                    const canvasWidth = document.documentElement.clientWidth;
                                     const canvasHeight = app.renderer.height;
                                     const imgWidth = bgSprite.texture.width;
                                     const imgHeight = bgSprite.texture.height;
@@ -593,7 +593,7 @@
 
                                 // Listen for window resize events
                                 window.addEventListener('resize', () => {
-                                    app.renderer.resize(window.innerWidth, window.innerHeight);
+                                    app.renderer.resize(document.documentElement.clientWidth, window.innerHeight);
                                     resizeBackground(); // Only update the sprite, do NOT reload assets
                                 });
 
@@ -603,18 +603,15 @@
 
                         //  Text
                             const textContainer = new PIXI.Container();
-                            const padding = 50;
-                            const spacing = 70;
-                            let bottomY = app.screen.height - padding;
 
                             // Function to update text metrics dynamically (widths + font sizes)
                             function updateTextMetrics() {
-                                const screenWidth = app.screen.width;
+                                const screenWidth = document.documentElement.clientWidth;
 
                                 return {
                                     headingTextWidth: screenWidth * 0.9,
                                     descriptionTextWidth: screenWidth * 0.6,
-                                    headingFontSize: Math.min(Math.max(screenWidth * 0.08, 35), 90),         // min 40px, max 90px
+                                    headingFontSize: Math.min(Math.max(screenWidth * 0.08, 35), 90),         // min 35px, max 90px
                                     descriptionFontSize: Math.min(Math.max(screenWidth * 0.025, 16), 30)     // min 16px, max 30px
                                 };
                             }
@@ -665,6 +662,11 @@
 
                             // Function to align texts vertically
                             function alignText() {
+                                // Determine padding based on screen width
+                                // Padding is either 50 or 25 depending if dekstop or mobile 768px breakpoint
+                                let padding = window.innerWidth >= 768 ? 50 : 25;
+                                let bottomY = app.screen.height - padding;
+
                                 const {
                                     headingTextWidth,
                                     descriptionTextWidth
