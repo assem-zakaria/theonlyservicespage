@@ -220,7 +220,7 @@
                     const progressContainer = document.getElementById('proj_screens_progress');
                     const canvas_el = document.getElementById('serviceCanvas');
 
-                //  Swiper Progress Numbers (Loop through the items and create <span> elements)
+                //  Create Swipe Progress Numbers (Loop through the items and create <span> elements)
                     slide_items.forEach((_, index) => {
                       const span = document.createElement('span');
                       span.textContent = (index + 1).toString().padStart(2, '0'); // format as 01, 02, etc.
@@ -247,8 +247,7 @@
                                   scrub: 1.5,
                                 }
                               })
-                            });
-                            
+                            });     
 
                         //  Projects Screen
                             slide_items.forEach((el, index) => {
@@ -317,25 +316,22 @@
                                 }, "<");
                             });
 
-                        window.addEventListener("load", () => {
-                            ScrollTrigger.refresh();
-                        });
-
+                        //  Resize
+                            window.addEventListener("load", () => {
+                                ScrollTrigger.refresh();
+                            });
                     }
 
                 //  Mobile Timeline
                     function mobileFunction() {
 
-                        console.log("mobileFunction");
+                        //  ScrollTrigger Configs
+                            ScrollTrigger.config({ 
+                                ignoreMobileResize: true,
+                                autoRefreshEvents: "",
+                            });
 
-                        ScrollTrigger.config({ 
-                            ignoreMobileResize: true,
-                            autoRefreshEvents: "",
-                        });
-
-                        ScrollTrigger.normalizeScroll(true);
-
-
+                            ScrollTrigger.normalizeScroll(true);
 
                         //  Services List
                             item_els.forEach(item => {
@@ -417,9 +413,10 @@
                                 });
                             });
 
-                        window.addEventListener("load", () => {
-                            ScrollTrigger.refresh();
-                        });
+                        //  Resize
+                            window.addEventListener("load", () => {
+                                ScrollTrigger.refresh();
+                            });
                     }
 
                 //  Both Desktop and Mobile
@@ -536,7 +533,9 @@
                                     });
 
                                     app.stage.filters = [lensFilter];
-                                    app.stage.interactive = true;
+                                    // app.stage.interactive = true;
+
+                                    app.stage.eventMode = 'static';
 
 
                                     canvas_el.addEventListener('pointermove', (event) => {
