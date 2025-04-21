@@ -440,11 +440,7 @@
                                 height: window.innerHeight,
                                 backgroundAlpha: 0, 
                                 view: canvas_el, 
-                                resolution: window.devicePixelRatio || 1,
-                                autoDensity: true,
                             });
-
-
 
                         //  Background Image
                             let bgSprite = null;
@@ -667,7 +663,7 @@
                             // Function to align texts vertically
                             function alignText() {
                                 // Determine padding based on screen width
-                                // Padding is either 50 or 25 depending if dekstop or mobile 768px breakpoint
+                                // Padding is either 50 or 25 depending if dekstop or mobile 768px breakpoi
                                 let padding = window.innerWidth >= 768 ? 50 : 25;
                                 let bottomY = app.screen.height - padding;
 
