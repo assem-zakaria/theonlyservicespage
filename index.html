@@ -247,15 +247,18 @@
     <!-- Begin JavaScript Files -->
 
         <!--  Using CDN  -->
-        <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script> -->
 
         <!--  Using Local Files  -->
-        <!-- <script src="/js/gsap.min.js"></script>
+        <script src="/js/gsap.min.js"></script>
         <script src="/js/ScrollTrigger.min.js"></script>
-        <script src="/js/pixi.min.js"></script> -->
+        <script src="/js/pixi.min.js"></script>
+        <script src="/js/swiper-bundle.min.js"></script>
+
+        
 
     <!-- End JavaScript Files -->
 
@@ -271,7 +274,7 @@
                     const progressContainer = document.getElementById('proj_screens_progress');
                     const canvas_el = document.getElementById('serviceCanvas');
 
-                //  Create Swipe Progress Numbers (Loop through the items and create <span> elements)
+                //  Create Swipe Progress Numbers Based on number of projects (Loop through the items and create <span> elements)
                     slide_items.forEach((_, index) => {
                       const span = document.createElement('span');
                       span.textContent = (index + 1).toString().padStart(2, '0'); // format as 01, 02, etc.
@@ -402,72 +405,7 @@
                                 }
                               })
                             });
-                        
-                        //  Projects Screen
-                        //     slide_items.forEach((el, index) => {
-                        //         el.style.zIndex = slide_items.length - index;
-                        //         gsap.set(el, { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)" });
-                        //     });
 
-                        //     const hero_section_tl = gsap.timeline({
-                        //         scrollTrigger: {
-                        //             trigger: "#proj_screens",
-                        //             start: "top top",
-                        //             end: "+=400%",
-                        //             pin: true,
-                        //             anticipatePin: 1,
-                        //             scrub: 1,
-                        //             ease: 'none',
-                        //             onUpdate: function (self) {
-                        //                 const progress = self.progress * 100;
-                        //                 const mappedProgress = 501 + (progress / 100) * (1010 - 501);
-
-                        //                 // Animate the strokeDasharray
-                        //                 const circle = document.querySelector("#proj_screens_progress svg circle:nth-of-type(2)");
-                        //                 gsap.to(circle, {
-                        //                     strokeDasharray: mappedProgress.toFixed(2)
-                        //                 });
-
-                        //                 // Get dynamic elements
-                        //                 const items = document.querySelectorAll("#proj_screens .proj-screen-item");
-                        //                 const spans = document.querySelectorAll("#proj_screens #proj_screens_progress span");
-
-                        //                 const itemCount = items.length;
-                        //                 const segmentSize = 100 / itemCount;
-
-                        //                 // Find current segment index based on progress
-                        //                 let activeIndex = Math.floor(progress / segmentSize);
-                        //                 if (activeIndex >= itemCount) activeIndex = itemCount - 1;
-
-                        //                 // Update span visibility
-                        //                 spans.forEach((el, index) => {
-                        //                     if (index === activeIndex) {
-                        //                         el.classList.add("show");
-                        //                     } else {
-                        //                         el.classList.remove("show");
-                        //                     }
-                        //                 });
-                        //             },
-                        //         }
-                        //     });
-
-                        //     const elements_except_last = gsap.utils.toArray(".proj-screen-item:not(:last-child)");
-
-                        //     // Animate each element individually
-                        //     elements_except_last.forEach((item, index) => {
-                        //         hero_section_tl.to(item, {
-                        //             css: { 
-                        //                 clipPath: "polygon(0px 0%, 100% 0px, 100% 0px, 0px 0px)",
-                        //                 WebkitClipPath: "polygon(0px 0px, 100% 0px, 100% 0px, 0px 0px)"
-                        //             },
-                        //             stagger: 0.5,
-                        //         });
-                        //     });
-
-                        // //  Resize
-                        //     window.addEventListener("load", () => {
-                        //         ScrollTrigger.refresh();
-                        //     });
                     }
 
                 //  Both Desktop and Mobile
@@ -843,6 +781,10 @@
                     //  Project Swipe Swiper Mobile
                         const swiper = new Swiper('#proj_screens_swiper', {
                             loop: true,
+                            autoplay: {
+                                delay: 2500,
+                                // disableOnInteraction: false,
+                            },
                             pagination: {
                                 el: '.swiper-pagination',
                             },
